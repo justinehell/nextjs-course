@@ -1,10 +1,7 @@
-// 1. import {useRouter} from 'next/router'
+import {server} from '../../../config'
 import Link from "next/link"
 
 const article = ({article}) => {
-    // 1. Use Router to get the current article's id
-    // const router = useRouter()
-    // const {id} = router.query
     return (
         <>
             <h1>{article.title}</h1>
@@ -14,6 +11,31 @@ const article = ({article}) => {
             <Link href="/">Go Back</Link>
         </>
     )
+}
+
+export const getStaticProps = async (context) => {
+    const res = await fetch(`${server}/api/articles/${context.params.id}`)
+
+    const article = await res.json()
+
+    return {
+        props: {
+            article
+        }
+    }
+}
+
+export const getStaticPaths = async () => {
+    const res = await fetch(`${server}/api/articles`)
+
+    const articles = await res.json()
+
+    const ids = articles.map(article => article.id)
+    const paths = ids.map(id => ({params: {id: id.toString()}}))
+    return {
+            paths,
+            fallback: false 
+        }
 }
 
 // 2. use getServerSideProps to get the id
@@ -34,29 +56,29 @@ const article = ({article}) => {
 //    data fetched at build time -> faster solution
 //    even if we set the limit to 6 articles, if we go to /article/10
 //    it'll display the 10th article's data
-export const getStaticProps = async (context) => {
-    const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${context.params.id}`)
+// export const getStaticProps = async (context) => {
+//     const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${context.params.id}`)
 
-    const article = await res.json()
+//     const article = await res.json()
 
-    return {
-        props: {
-            article
-        }
-    }
-}
+//     return {
+//         props: {
+//             article
+//         }
+//     }
+// }
 
-export const getStaticPaths = async () => {
-    const res = await fetch(`https://jsonplaceholder.typicode.com/posts`) // generate the path for all posts
+// export const getStaticPaths = async () => {
+//     const res = await fetch(`https://jsonplaceholder.typicode.com/posts`) // generate the path for all posts
 
-    const articles = await res.json()
+//     const articles = await res.json()
 
-    const ids = articles.map(article => article.id)
-    const paths = ids.map(id => ({params: {id: id.toString()}}))
-    return {
-            paths, // must be equal to {params: {id: '1', id: '2'}}
-            fallback: false  // if we go to something that doesn't exist in the data, it's gonna return a 404 page
-        }
-}
+//     const ids = articles.map(article => article.id)
+//     const paths = ids.map(id => ({params: {id: id.toString()}}))
+//     return {
+//             paths, // must be equal to {params: {id: '1', id: '2'}}
+//             fallback: false  // if we go to something that doesn't exist in the data, it's gonna return a 404 page
+//         }
+// }
 
 export default article
